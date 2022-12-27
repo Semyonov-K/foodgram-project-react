@@ -62,7 +62,7 @@ class FollowCreateViewSet(APIView):
             user=request.user,
             author_id=user_id
         )
-        if subscription:
+        if subscription.exists():
             subscription.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(

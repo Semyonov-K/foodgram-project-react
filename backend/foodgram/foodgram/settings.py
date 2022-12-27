@@ -1,9 +1,12 @@
 import os
 from datetime import timedelta
+from dotenv import load_dotenv
+
+load_dotenv()
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-SECRET_KEY = 'zfl1(%5b736h#6lnu8!)o@b-53^4#qxkng@q+)k7ydfo&&9zjp'
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 DEBUG = True
 

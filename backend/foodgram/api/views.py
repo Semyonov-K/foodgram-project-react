@@ -9,7 +9,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from recipes.models import Favorite, Ingredient, Recipe, RecipeIngredient, Tag
-
 from .filters import IngredientFilter, RecipeFilter
 from .serializers import (FavoriteSerializer, IngredientSerializer,
                           RecipePostUpdateSerializer, RecipeSerializer,
@@ -34,6 +33,14 @@ class FavoriteViewSet(APIView):
     def post(self, request, *args, **kwargs):
         recipe_id = self.kwargs.get('recipe_id')
         recipe = get_object_or_404(Recipe, id=recipe_id)
+        if Favorite.objects.filter(
+                user=request.user,
+                recipe_id=recipe_id
+        ).exists():
+            return Response(
+                {'error': 'Рецепт уже добавлен в избранное'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         Favorite.objects.create(
             user=request.user,
             recipe_id=recipe_id
@@ -51,7 +58,7 @@ class FavoriteViewSet(APIView):
             user=request.user,
             recipe_id=recipe_id
         )
-        if favorite:
+        if favorite.exists():
             favorite.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(

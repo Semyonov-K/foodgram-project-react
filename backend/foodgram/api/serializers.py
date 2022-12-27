@@ -5,7 +5,6 @@ from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag)
 from users.models import CustomUser
 from users.serializers import CustomUserSerializer
-
 from .decoderimage import Base64ImageField
 
 
@@ -118,6 +117,13 @@ class RecipePostUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('ingredients', 'tags', 'name', 'image', 'text', 'cooking_time')
         model = Recipe
+    
+    def validate(self, data):
+        ingredients = data['ingredients']
+        if len(ingredients) != len(set([item['id'] for item in ingredients])):
+            raise serializers.ValidationError(
+                'Ингредиенты не должны повторяться!')
+        return data
 
     def add_ingredient_tag(self, ingredients, tags, recipe):
         for tag in tags:

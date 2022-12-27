@@ -45,6 +45,7 @@ class IngredientAdmin(admin.ModelAdmin):
     )
     empty_value_display = '-пусто-'
 
+
 class RecipeIngredientsInline(admin.TabularInline):
     model = RecipeIngredient
 
