@@ -1,5 +1,6 @@
 from django.core.validators import MinValueValidator
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag)
@@ -113,17 +114,7 @@ class RecipePostUpdateSerializer(serializers.ModelSerializer):
         fields = ('ingredients', 'tags', 'author', 'name', 'image', 'text', 'cooking_time')
         model = Recipe
     
-    def validate(self, data):
-        ingredients = data['ingredients']
-        if len(ingredients) != len(set([item['id'] for item in ingredients])):
-            raise serializers.ValidationError(
-                'Ингредиенты не должны повторяться!')
-        return data
-
-    def add_ingredient_tag(self, ingredients, tags, recipe):
-        for tag in tags:
-            recipe.tags.add(tag)
-            recipe.save()
+    def add_ingredient_tag(self, recipe, ingredients):
         RecipeIngredient.objects.bulk_create([
             RecipeIngredient(
                 recipe=recipe,
@@ -131,22 +122,35 @@ class RecipePostUpdateSerializer(serializers.ModelSerializer):
                 amount=ingredient['amount'], )
             for ingredient in ingredients
         ])
-        return recipe
 
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data)
-        return self.add_ingredient_tag(ingredients, tags, recipe)
+        recipe.tags.set(tags)
+        self.add_ingredient_tag(recipe, ingredients)
+        return recipe
 
-    def update(self, instance, validated_data):
-        instance.ingredients.clear()
-        instance.tags.clear()
+    def update(self, recipe, validated_data):
+        RecipeIngredient.objects.filter(recipe=recipe).delete()
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
-        super().update(instance, validated_data)
-        return self.add_ingredient_tag(ingredients, tags, instance)
+        if tags:
+            recipe.tags.clear()
+            recipe.tags.set(tags)
+        if ingredients:
+            recipe.ingredients.clear()
+            self.add_ingredient_tag(recipe, ingredients)
+ 
+        return super().update(recipe, validated_data)
 
     def to_representation(self, value):
         serializer = RecipeSerializer(value, context=self.context)
         return serializer.data
+    
+    def validate(self, data):
+        ingredients = data['ingredients']
+        if len(ingredients) != len(set([item['id'] for item in ingredients])):
+            raise serializers.ValidationError(
+                'Ингредиенты не должны повторяться!')
+        return data

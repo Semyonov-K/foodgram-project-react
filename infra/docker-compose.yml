@@ -7,8 +7,7 @@ services:
     env_file:
       - ./.env
 
-  backend: #отсюда до волюма
-    #build: ../backend
+  backend:
     image: fixer2011/backend:latest
     restart: always
     volumes:
@@ -19,10 +18,7 @@ services:
     env_file:
       - ./.env
 
-  frontend: #отсюда до имаги
-    #build:
-      #context: ../frontend
-      #dockerfile: Dockerfile
+  frontend:
     image: fixer2011/frontend:latest
     volumes:
       - frontend_value:/app/result_build/build
@@ -38,7 +34,7 @@ services:
       - static_value:/var/html/staticfiles/
       - media_value:/var/html/media/
     depends_on:
-      - backend #tut beel frontend
+      - backend
 
 volumes:
   static_value:

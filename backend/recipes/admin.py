@@ -48,6 +48,7 @@ class IngredientAdmin(admin.ModelAdmin):
 
 class RecipeIngredientsInline(admin.TabularInline):
     model = RecipeIngredient
+    min_num = 1
 
 
 @admin.register(RecipeIngredient)
@@ -95,7 +96,7 @@ class RecipeAdmin(admin.ModelAdmin):
         return field
 
     def get_favorites(self, obj):
-        return obj.favorites.count()
+        return obj.favorite.count()
 
     get_favorites.short_description = (
         'Число добавлений в избранное'
